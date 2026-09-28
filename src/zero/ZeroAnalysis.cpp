@@ -19,7 +19,7 @@
 
 using namespace mlir;
 
-namespace zero {
+namespace mlir_analysis_pass::zero {
 
 void ZeroAnalysis::setToEntryState(ZeroLattice *lattice) {
   propagateIfChanged(lattice, lattice->join(ZeroState::top()));
@@ -74,4 +74,4 @@ ZeroAnalysis::visitOperation(Operation *op,
   return unknown();
 }
 
-} // namespace zero
+} // namespace mlir_analysis_pass::zero

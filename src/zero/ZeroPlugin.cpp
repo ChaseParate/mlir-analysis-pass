@@ -1,4 +1,4 @@
-//===- Plugin.cpp - Pass definition and plugin entry point ----------------===//
+//===- ZeroPlugin.cpp - Pass definition and plugin entry point ----------------===//
 //
 // Scaffolding: wires the analysis into a pass and exposes it to mlir-opt.
 //
@@ -42,7 +42,7 @@ struct ZeroAnalysisPass
     // conditions for it.  Both are prerequisites, not extras.
     solver.load<dataflow::DeadCodeAnalysis>();
     solver.load<dataflow::SparseConstantPropagation>();
-    solver.load<zero::ZeroAnalysis>();
+    solver.load<mlir_analysis_pass::zero::ZeroAnalysis>();
 
     if (failed(solver.initializeAndRun(getOperation()))) {
       getOperation().emitError("zero analysis failed to reach a fixed point");
@@ -51,23 +51,26 @@ struct ZeroAnalysisPass
 
     // Query states only now that the solver has converged.
     auto describe = [&](Value value, AsmState &asmState) -> std::string {
-      const auto *lattice = solver.lookupState<zero::ZeroLattice>(value);
+      const auto *lattice =
+          solver.lookupState<mlir_analysis_pass::zero::ZeroLattice>(value);
       if (!lattice)
         return {};
-      zero::Kind kind = lattice->getValue().kind;
+      mlir_analysis_pass::zero::Kind kind = lattice->getValue().kind;
       // Top and bottom say nothing; printing them would bury the real facts.
-      if (kind == zero::Kind::Top || kind == zero::Kind::Bottom)
+      if (kind == mlir_analysis_pass::zero::Kind::Top ||
+          kind == mlir_analysis_pass::zero::Kind::Bottom)
         return {};
       std::string description;
       llvm::raw_string_ostream os(description);
       value.printAsOperand(os, asmState);
-      os << " is " << zero::name(kind);
+      os << " is " << mlir_analysis_pass::zero::name(kind);
       return description;
     };
 
     // stderr, so that mlir-opt's stdout stays the unmodified IR and the two can
     // be redirected independently.
-    zero::printAnnotated(getOperation(), describe, llvm::errs());
+    mlir_analysis_pass::annotate::printAnnotated(getOperation(), describe,
+                                                  llvm::errs());
 
     // This pass only reads.
     markAllAnalysesPreserved();

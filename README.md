@@ -68,21 +68,33 @@ Two files hold the analysis; the rest is reusable scaffolding.
 
 | File | |
 |---|---|
-| `ZeroDomain.h` | The abstract domain: the lattice elements and their join. |
-| `ZeroAnalysis.cpp` | The transfer function: two rules, plus a default. |
-| `ZeroAnalysis.h` | Ties the domain to MLIR's sparse forward analysis. |
-| `Annotate.{h,cpp}` | Prints IR with a comment on each value. Domain-agnostic. |
-| `Plugin.cpp` | The pass, the solver setup, and the `mlir-opt` entry point. |
+| `src/zero/ZeroDomain.h` | The abstract domain: the lattice elements and their join. |
+| `src/zero/ZeroAnalysis.cpp` | The transfer function: two rules, plus a default. |
+| `src/zero/ZeroAnalysis.h` | Ties the domain to MLIR's sparse forward analysis. |
+| `src/Annotate.{h,cpp}` | Prints IR with a comment on each value. Domain-agnostic. |
+| `src/zero/ZeroPlugin.cpp` | The pass, the solver setup, and the `mlir-opt` entry point. |
+| `src/zero/CMakeLists.txt` | The `ZeroAnalysis` plugin target and its sources. |
+| `test/zero/CMakeLists.txt` | The `zero-analysis` test registration. |
 | `cmake/RunTest.cmake` | The test runner. |
 
-To build a different analysis, replace `ZeroDomain.h` and the transfer
-functions in `ZeroAnalysis.cpp`. To rename the whole thing, rename the files,
-the `zero` namespace, and the three places `ZeroAnalysis` and `zero-analysis`
-appear in `CMakeLists.txt` and `Plugin.cpp`.
+To build a different analysis, copy `src/zero/` and `test/zero/` to new
+subdirectories, add each to its parent `CMakeLists.txt`, and replace
+`ZeroDomain.h` and the transfer functions in `ZeroAnalysis.cpp`. Each analysis
+and its tests are CMake subdirectories, not separate `project()` calls: all
+plugins share the one MLIR discovery and configuration at the repository root.
+To rename the included analysis, rename the files, the `zero` namespace, and
+the `ZeroAnalysis` and `zero-analysis` identifiers in
+`src/zero/CMakeLists.txt`, `src/zero/ZeroPlugin.cpp`, and
+`test/zero/CMakeLists.txt`.
+
+Project code lives below the `mlir_analysis_pass` C++ namespace:
+`mlir_analysis_pass::annotate` contains the reusable annotated printer, and
+`mlir_analysis_pass::zero` contains the included analysis. New analyses should
+use another nested namespace below that project-owned root.
 
 ## Tests
 
-`test/zero.mlir` exercises every transfer rule. `test/zero.expected` lists
+`test/zero/zero.mlir` exercises every transfer rule. `test/zero/zero.expected` lists
 facts that must appear in the output, and — with a leading `!` — facts that
 must not. The negative checks are the ones that matter: an unsound transfer
 function still produces plausible-looking output, and only a test that pins
@@ -90,7 +102,7 @@ down what the analysis must *not* claim will catch it.
 
 Note that MLIR's printer renumbers SSA values, so the checks are written
 against operation text rather than the names in `zero.mlir`. After adding or
-reordering operations, regenerate with `./run.sh test/zero.mlir`.
+reordering operations, regenerate with `./run.sh test/zero/zero.mlir`.
 
 ## Notes on portability
 
@@ -126,7 +138,7 @@ repository is cloned by a Windows git and built inside WSL2.
 
 ## How the analysis works
 
-`Plugin.cpp` loads three analyses into one solver. `DeadCodeAnalysis` supplies
+`ZeroPlugin.cpp` loads three analyses into one solver. `DeadCodeAnalysis` supplies
 reachability — without it the solver must assume every branch is taken — and
 `SparseConstantPropagation` resolves branch conditions on its behalf. These are
 prerequisites for a precise result, not optional extras. `ZeroAnalysis` then

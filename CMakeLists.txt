@@ -87,27 +87,7 @@ endif()
 include_directories(SYSTEM ${LLVM_INCLUDE_DIRS} ${MLIR_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-#===----------------------------------------------------------------------===#
-# The plugin
-#
-# MODULE + PLUGIN_TOOL means: build a loadable module that deliberately leaves
-# its LLVM/MLIR symbols undefined, to be satisfied by the mlir-opt process
-# that dlopens it.  Linking MLIR's static libraries in here instead would
-# duplicate every cl::opt and dialect registry, which fails at load time.
-#
-# The resulting file is ZeroAnalysis.dylib on macOS and ZeroAnalysis.so on
-# Linux and WSL2.  Nothing in this project should spell that suffix out;
-# ask CMake via $<TARGET_FILE:ZeroAnalysis>, or let run.sh probe for it.
-#===----------------------------------------------------------------------===#
-add_llvm_library(ZeroAnalysis MODULE PARTIAL_SOURCES_INTENDED
-  ZeroAnalysis.cpp
-  Annotate.cpp
-  Plugin.cpp
-  PLUGIN_TOOL mlir-opt
-)
-
-set_target_properties(ZeroAnalysis PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+add_subdirectory(src)
 
 #===----------------------------------------------------------------------===#
 # Tests
@@ -133,13 +113,7 @@ if(MLIR_OPT_EXECUTABLE)
   endif()
 
   enable_testing()
-  add_test(NAME zero-analysis
-    COMMAND ${CMAKE_COMMAND}
-      -DMLIR_OPT=${MLIR_OPT_EXECUTABLE}
-      -DPLUGIN=$<TARGET_FILE:ZeroAnalysis>
-      -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/test/zero.mlir
-      -DCHECKS=${CMAKE_CURRENT_SOURCE_DIR}/test/zero.expected
-      -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunTest.cmake)
+  add_subdirectory(test)
 else()
   message(STATUS "mlir-opt not found; skipping tests")
 endif()

@@ -24,7 +24,7 @@
 
 #include "llvm/Support/raw_ostream.h"
 
-namespace zero {
+namespace mlir_analysis_pass::zero {
 
 enum class Kind { Bottom, Zero, NonZero, Top };
 
@@ -76,6 +76,6 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
   return os;
 }
 
-} // namespace zero
+} // namespace mlir_analysis_pass::zero
 
 #endif

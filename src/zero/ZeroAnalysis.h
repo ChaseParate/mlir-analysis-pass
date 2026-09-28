@@ -6,7 +6,7 @@
 #include "ZeroDomain.h"
 #include "mlir/Analysis/DataFlow/SparseAnalysis.h"
 
-namespace zero {
+namespace mlir_analysis_pass::zero {
 
 using ZeroLattice = mlir::dataflow::Lattice<ZeroState>;
 
@@ -27,6 +27,6 @@ public:
   void setToEntryState(ZeroLattice *lattice) override;
 };
 
-} // namespace zero
+} // namespace mlir_analysis_pass::zero
 
 #endif
