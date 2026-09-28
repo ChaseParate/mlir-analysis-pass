@@ -3,9 +3,9 @@
 A starting point for writing an MLIR dataflow analysis as a loadable `mlir-opt`
 plugin, with no LLVM source tree required and nothing to patch upstream.
 
-The included analysis, `zero-analysis`, decides which integer values in the LLVM
-dialect are known to be zero. It has exactly two transfer rules and is meant to
-be replaced: the point is the scaffolding around it.
+The included `zero-analysis` decides which integer values in the LLVM dialect
+are known to be zero. `fpan-analysis` is an empty, loadable scaffold for the
+FPAN work; it currently reports no facts.
 
 ## Building
 
@@ -41,8 +41,9 @@ version does not match what you are building against.
 ./run.sh input.mlir
 ```
 
-`run.sh` locates the plugin whatever it is called on your platform and puts the
-annotated listing on stdout. Or invoke `mlir-opt` yourself:
+`run.sh` runs FPAN by default, locates the plugin whatever it is called on your
+platform, and puts the annotated listing on stdout. Use `./run.sh --analysis
+zero input.mlir` to run the original analysis. Or invoke `mlir-opt` yourself:
 
 ```sh
 mlir-opt --load-pass-plugin=build/ZeroAnalysis.so \
@@ -74,6 +75,7 @@ Two files hold the analysis; the rest is reusable scaffolding.
 | `src/Annotate.{h,cpp}` | Prints IR with a comment on each value. Domain-agnostic. |
 | `src/zero/ZeroPlugin.cpp` | The pass, the solver setup, and the `mlir-opt` entry point. |
 | `src/zero/CMakeLists.txt` | The `ZeroAnalysis` plugin target and its sources. |
+| `src/fpan/` | The `FPANAnalysis` plugin scaffold and its sources. |
 | `test/zero/CMakeLists.txt` | The `zero-analysis` test registration. |
 | `cmake/RunTest.cmake` | The test runner. |
 

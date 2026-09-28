@@ -4,9 +4,9 @@
 # tool the build did not already need.  That keeps `ctest` working identically
 # on Linux, macOS, and WSL2 -- and on a Windows host, should anyone try.
 #
-# Expected: -DMLIR_OPT= -DPLUGIN= -DINPUT= -DCHECKS=
+# Expected: -DMLIR_OPT= -DPLUGIN= -DPIPELINE= -DINPUT= -DCHECKS=
 
-foreach(required MLIR_OPT PLUGIN INPUT CHECKS)
+foreach(required MLIR_OPT PLUGIN PIPELINE INPUT CHECKS)
   if(NOT DEFINED ${required})
     message(FATAL_ERROR "RunTest.cmake: -D${required}= is required")
   endif()
@@ -15,7 +15,7 @@ endforeach()
 execute_process(
   COMMAND "${MLIR_OPT}"
           "--load-pass-plugin=${PLUGIN}"
-          "--pass-pipeline=builtin.module(zero-analysis)"
+          "--pass-pipeline=${PIPELINE}"
           "${INPUT}"
   OUTPUT_VARIABLE ignored_ir   # mlir-opt writes the unchanged IR to stdout
   ERROR_VARIABLE annotated
@@ -58,4 +58,4 @@ if(NOT failures STREQUAL "")
     "--- actual ---\n${annotated}")
 endif()
 
-message(STATUS "zero-analysis: all expected facts present")
+message(STATUS "${PIPELINE}: all expected facts present")

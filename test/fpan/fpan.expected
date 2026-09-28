@@ -1,0 +1,2 @@
+# FPAN is currently a scaffold. This smoke test verifies that its plugin
+# loads and its pass runs over LLVM-dialect input.
