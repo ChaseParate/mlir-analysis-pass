@@ -1,0 +1,21 @@
+module {
+  llvm.func @pos_zero() -> f32 {
+    %0 = llvm.mlir.constant(0.000000e+00 : f32) : f32
+    llvm.return %0 : f32
+  }
+
+  llvm.func @neg_zero() -> f32 {
+    %0 = llvm.mlir.constant(-0.000000e+00 : f32) : f32
+    llvm.return %0 : f32
+  }
+
+  llvm.func @pos_one() -> f32 {
+    %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32
+    llvm.return %0 : f32
+  }
+
+  llvm.func @neg_one() -> f32 {
+    %0 = llvm.mlir.constant(-1.000000e+00 : f32) : f32
+    llvm.return %0 : f32
+  }
+}

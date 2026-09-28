@@ -5,24 +5,56 @@
 #ifndef FPAN_DOMAIN_H
 #define FPAN_DOMAIN_H
 
+#include <cstdint>
+#include <string>
+#include <utility>
+
 #include "llvm/Support/raw_ostream.h"
 
 namespace mlir_analysis_pass::fpan {
 
-enum class Kind { Bottom, Zero, NonZero, Top };
+enum class Kind : std::uint8_t {
+  Bottom = 0,
 
-inline const char *name(Kind kind) {
-  switch (kind) {
-  case Kind::Bottom:
+  Negative = 1 << 0,
+  Zero = 1 << 1,
+  Positive = 1 << 2,
+
+  Top = Negative | Zero | Positive,
+};
+
+constexpr Kind operator|(const Kind &a, const Kind &b) {
+  return static_cast<Kind>(static_cast<std::uint8_t>(a) |
+                           static_cast<std::uint8_t>(b));
+}
+
+constexpr Kind &operator|=(Kind &self, const Kind &other) {
+  return self = self | other;
+}
+
+static inline std::string name(const Kind &kind) {
+  if (kind == Kind::Bottom)
     return "bottom";
-  case Kind::Zero:
-    return "zero";
-  case Kind::NonZero:
-    return "nonzero";
-  case Kind::Top:
+  if (kind == Kind::Top)
     return "top";
+
+  constexpr std::pair<Kind, const char *> flagLabels[] = {
+      {Kind::Negative, "negative"},
+      {Kind::Zero, "zero"},
+      {Kind::Positive, "positive"},
+  };
+
+  std::string result;
+  const std::uint8_t bits = static_cast<std::uint8_t>(kind);
+  for (const auto &[flag, label] : flagLabels) {
+    if (bits & static_cast<std::uint8_t>(flag)) {
+      if (!result.empty())
+        result += " or ";
+      result += label;
+    }
   }
-  return "top";
+
+  return result;
 }
 
 struct FPANState {
