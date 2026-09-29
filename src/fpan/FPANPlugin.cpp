@@ -52,18 +52,19 @@ struct FPANAnalysisPass
     // Query states only now that the solver has converged.
     auto describe = [&](Value value, AsmState &asmState) -> std::string {
       const auto *lattice =
-          solver.lookupState<mlir_analysis_pass::fpan::FPANLattice>(value);
+          solver.lookupState<mlir_analysis_pass::fpan::SELattice>(value);
       if (!lattice)
         return {};
-      mlir_analysis_pass::fpan::Kind kind = lattice->getValue().kind;
+
+      const auto &state = lattice->getValue();
       // Top and bottom say nothing; printing them would bury the real facts.
-      if (kind == mlir_analysis_pass::fpan::Kind::Top ||
-          kind == mlir_analysis_pass::fpan::Kind::Bottom)
+      if (state.isTop() || state.isBottom())
         return {};
+
       std::string description;
       llvm::raw_string_ostream os(description);
       value.printAsOperand(os, asmState);
-      os << " is " << mlir_analysis_pass::fpan::name(kind);
+      os << " is " << state;
       return description;
     };
 

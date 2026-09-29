@@ -8,10 +8,10 @@
 
 namespace mlir_analysis_pass::fpan {
 
-using FPANLattice = mlir::dataflow::Lattice<FPANState>;
+using SELattice = mlir::dataflow::Lattice<SEState>;
 
 class FPANAnalysis
-    : public mlir::dataflow::SparseForwardDataFlowAnalysis<FPANLattice> {
+    : public mlir::dataflow::SparseForwardDataFlowAnalysis<SELattice> {
 public:
   using SparseForwardDataFlowAnalysis::SparseForwardDataFlowAnalysis;
 
@@ -19,12 +19,12 @@ public:
   /// its results.  Must be monotone in the operand states.
   mlir::LogicalResult
   visitOperation(mlir::Operation *op,
-                 llvm::ArrayRef<const FPANLattice *> operands,
-                 llvm::ArrayRef<FPANLattice *> results) override;
+                 llvm::ArrayRef<const SELattice *> operands,
+                 llvm::ArrayRef<SELattice *> results) override;
 
   /// The state of anything entering the analysis from outside: function
   /// arguments, and results the transfer function declines to reason about.
-  void setToEntryState(FPANLattice *lattice) override;
+  void setToEntryState(SELattice *lattice) override;
 };
 
 } // namespace mlir_analysis_pass::fpan

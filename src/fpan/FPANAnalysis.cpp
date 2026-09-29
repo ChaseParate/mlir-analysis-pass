@@ -19,41 +19,33 @@ using namespace mlir;
 
 namespace mlir_analysis_pass::fpan {
 
-void FPANAnalysis::setToEntryState(FPANLattice *lattice) {
-  propagateIfChanged(lattice, lattice->join(FPANState::top()));
+void FPANAnalysis::setToEntryState(SELattice *lattice) {
+  propagateIfChanged(lattice, lattice->join(SEState::top()));
 }
 
 LogicalResult
 FPANAnalysis::visitOperation(Operation *op,
-                             ArrayRef<const FPANLattice *> operands,
-                             ArrayRef<FPANLattice *> results) {
-  // Raising a result to top says "this operation could produce anything",
-  // which is always a sound answer and is what every unhandled case does.
+                             ArrayRef<const SELattice *> operands,
+                             ArrayRef<SELattice *> results) {
   auto unknown = [&] {
     setAllToEntryStates(results);
     return success();
   };
 
-  if (op->getNumResults() != 1 || !op->getResult(0).getType().isFloat())
+  if (op->getNumResults() != 1 || !op->getResult(0).getType().isF32())
     return unknown();
-  FPANLattice *result = results[0];
+  SELattice *result = results[0];
 
+  // Float Constants
   FloatAttr attr;
   if (matchPattern(op, m_Constant(&attr))) {
-    FPANState state;
-    llvm::APFloat value = attr.getValue();
-    if (value.isNaN())
+    const llvm::APFloat value = attr.getValue();
+    const std::optional<SEState> state = SEState::fromFloat(value);
+
+    if (!state.has_value())
       return unknown();
 
-    if (value.isZero())
-      state.kind |= Kind::Zero;
-
-    if (value.isNegative())
-      state.kind |= Kind::Negative;
-    else
-      state.kind |= Kind::Positive;
-
-    propagateIfChanged(result, result->join(state));
+    propagateIfChanged(result, result->join(*state));
     return success();
   }
 
