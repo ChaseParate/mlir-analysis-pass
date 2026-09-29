@@ -70,8 +70,7 @@ struct ZeroState {
   void print(llvm::raw_ostream &os) const { os << name(kind); }
 };
 
-inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                     const ZeroState &state) {
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const ZeroState &state) {
   state.print(os);
   return os;
 }

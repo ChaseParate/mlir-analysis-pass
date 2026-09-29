@@ -1,4 +1,4 @@
-//===- ZeroPlugin.cpp - Pass definition and plugin entry point ----------------===//
+//===- ZeroPlugin.cpp - Pass definition and plugin entry point ------------===//
 //
 // Scaffolding: wires the analysis into a pass and exposes it to mlir-opt.
 //
@@ -22,8 +22,7 @@ using namespace mlir;
 
 namespace {
 
-struct ZeroAnalysisPass
-    : PassWrapper<ZeroAnalysisPass, OperationPass<ModuleOp>> {
+struct ZeroAnalysisPass : PassWrapper<ZeroAnalysisPass, OperationPass<ModuleOp>> {
   MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ZeroAnalysisPass)
 
   StringRef getArgument() const final { return "zero-analysis"; }
@@ -51,8 +50,7 @@ struct ZeroAnalysisPass
 
     // Query states only now that the solver has converged.
     auto describe = [&](Value value, AsmState &asmState) -> std::string {
-      const auto *lattice =
-          solver.lookupState<mlir_analysis_pass::zero::ZeroLattice>(value);
+      const auto *lattice = solver.lookupState<mlir_analysis_pass::zero::ZeroLattice>(value);
       if (!lattice)
         return {};
       mlir_analysis_pass::zero::Kind kind = lattice->getValue().kind;
@@ -69,8 +67,7 @@ struct ZeroAnalysisPass
 
     // stderr, so that mlir-opt's stdout stays the unmodified IR and the two can
     // be redirected independently.
-    mlir_analysis_pass::annotate::printAnnotated(getOperation(), describe,
-                                                  llvm::errs());
+    mlir_analysis_pass::annotate::printAnnotated(getOperation(), describe, llvm::errs());
 
     // This pass only reads.
     markAllAnalysesPreserved();

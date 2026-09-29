@@ -19,10 +19,9 @@ namespace mlir_analysis_pass::annotate {
 /// `describe` returns the annotation for a value, or an empty string to leave
 /// that value unannotated.  It is passed an AsmState so it can print SSA names
 /// that match the listing.
-void printAnnotated(
-    mlir::Operation *root,
-    llvm::function_ref<std::string(mlir::Value, mlir::AsmState &)> describe,
-    llvm::raw_ostream &os);
+void printAnnotated(mlir::Operation *root,
+                    llvm::function_ref<std::string(mlir::Value, mlir::AsmState &)> describe,
+                    llvm::raw_ostream &os);
 
 } // namespace mlir_analysis_pass::annotate
 

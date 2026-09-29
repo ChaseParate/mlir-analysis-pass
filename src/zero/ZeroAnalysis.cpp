@@ -25,10 +25,8 @@ void ZeroAnalysis::setToEntryState(ZeroLattice *lattice) {
   propagateIfChanged(lattice, lattice->join(ZeroState::top()));
 }
 
-LogicalResult
-ZeroAnalysis::visitOperation(Operation *op,
-                             ArrayRef<const ZeroLattice *> operands,
-                             ArrayRef<ZeroLattice *> results) {
+LogicalResult ZeroAnalysis::visitOperation(Operation *op, ArrayRef<const ZeroLattice *> operands,
+                                           ArrayRef<ZeroLattice *> results) {
   // Raising a result to top says "this operation could produce anything",
   // which is always a sound answer and is what every unhandled case does.
   auto unknown = [&] {

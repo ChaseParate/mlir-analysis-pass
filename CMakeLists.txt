@@ -74,6 +74,29 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Keep the project's C++ sources in the LLVM style used by MLIR.  MLIR test
+# inputs are intentionally excluded: clang-format does not parse MLIR syntax.
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
+if(CLANG_FORMAT_EXECUTABLE)
+  set(FORMAT_SOURCES
+    src/Annotate.cpp
+    src/Annotate.h
+    src/fpan/FPANAnalysis.cpp
+    src/fpan/FPANAnalysis.h
+    src/fpan/FPANDomain.h
+    src/fpan/FPANPlugin.cpp
+    src/zero/ZeroAnalysis.cpp
+    src/zero/ZeroAnalysis.h
+    src/zero/ZeroDomain.h
+    src/zero/ZeroPlugin.cpp)
+  add_custom_target(format
+    COMMAND "${CLANG_FORMAT_EXECUTABLE}" -i ${FORMAT_SOURCES}
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    COMMENT "Formatting C++ sources")
+else()
+  message(STATUS "clang-format not found; the format target is unavailable")
+endif()
+
 # add_llvm_library(MODULE) quietly declines to create a target when the host
 # LLVM cannot load plugins, which turns into a confusing "no such file" much
 # later.  Fail here instead, while there is still a useful message to give.

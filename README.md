@@ -15,6 +15,12 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
+Format the C++ sources with LLVM style:
+
+```sh
+cmake --build build --target format
+```
+
 That is the whole procedure on Linux, macOS, and WSL2. There is no platform
 flag to set and no path to edit. `CMakeLists.txt` finds MLIR by asking
 whichever `llvm-config` is on your `PATH` where its CMake package lives, so if

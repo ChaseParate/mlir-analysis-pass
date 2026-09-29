@@ -12,8 +12,8 @@
 #include <string>
 #include <utility>
 
-#include "llvm/Support/raw_ostream.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace mlir_analysis_pass::fpan {
 
@@ -25,7 +25,8 @@ constexpr Exponent kZeroExponent = kEMin - 1; // Sentinel value for zeroes.
 constexpr std::size_t kExponentCount = kEMax - kZeroExponent + 1;
 
 class SEState {
-  // Lower bit set means positive, upper bit set means negative. Both bits set means top, both unset means bottom.
+  // Lower bit set means positive, upper bit set means negative. Both bits set
+  // means top, both unset means bottom.
   std::bitset<kExponentCount * 2> signsByExponent;
 
   static inline constexpr std::size_t index(Exponent exponent, bool negative) {
@@ -61,9 +62,7 @@ public:
     return signsByExponent.test(index(exponent, negative));
   }
 
-  void setSign(Exponent exponent, bool negative) {
-    signsByExponent.set(index(exponent, negative));
-  }
+  void setSign(Exponent exponent, bool negative) { signsByExponent.set(index(exponent, negative)); }
 
   static SEState top() {
     SEState state;
@@ -72,9 +71,7 @@ public:
     return state;
   }
 
-  static SEState bottom() {
-    return {};
-  }
+  static SEState bottom() { return {}; }
 
   bool isTop() const { return signsByExponent.all(); }
   bool isBottom() const { return signsByExponent.none(); }
@@ -95,7 +92,8 @@ public:
 
     bool first = true;
     for (std::size_t exponentIndex = 0; exponentIndex < kExponentCount; ++exponentIndex) {
-      Exponent exponent = static_cast<Exponent>(static_cast<int>(kZeroExponent) + static_cast<int>(exponentIndex));
+      Exponent exponent =
+          static_cast<Exponent>(static_cast<int>(kZeroExponent) + static_cast<int>(exponentIndex));
       bool hasPositive = hasSign(exponent, false), hasNegative = hasSign(exponent, true);
 
       if (!hasPositive && !hasNegative)
@@ -105,9 +103,7 @@ public:
         os << ", ";
       first = false;
 
-      const char *signText = hasPositive && hasNegative
-        ? "+/-"
-        : hasPositive ? "+" : "-";
+      const char *signText = (hasPositive && hasNegative) ? "+/-" : (hasPositive ? "+" : "-");
 
       os << '(';
       if (exponent == kZeroExponent)

@@ -23,10 +23,8 @@ void FPANAnalysis::setToEntryState(SELattice *lattice) {
   propagateIfChanged(lattice, lattice->join(SEState::top()));
 }
 
-LogicalResult
-FPANAnalysis::visitOperation(Operation *op,
-                             ArrayRef<const SELattice *> operands,
-                             ArrayRef<SELattice *> results) {
+LogicalResult FPANAnalysis::visitOperation(Operation *op, ArrayRef<const SELattice *> operands,
+                                           ArrayRef<SELattice *> results) {
   auto unknown = [&] {
     setAllToEntryStates(results);
     return success();
