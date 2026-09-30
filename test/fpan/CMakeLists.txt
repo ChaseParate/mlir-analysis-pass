@@ -28,3 +28,9 @@ add_fpan_analysis_test(
   lemma_family_se_i.mlir
   lemma_family_se_i.expected
 )
+
+add_fpan_analysis_test(
+  cfg_join
+  cfg_join.mlir
+  cfg_join.expected
+)

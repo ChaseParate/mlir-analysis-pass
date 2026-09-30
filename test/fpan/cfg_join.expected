@@ -1,0 +1,9 @@
+# Block arguments join the two predecessor states.
+// argument: %3 is {(s = +, e = -24), (s = +, e = 0)}
+
+# Every pair in the joined state satisfies SE-I with %rhs.
+call @__fpan_twosum_f32(%3, %2) : (f32, f32) -> (f32, f32) // %4#0 is {(s = +, e = -24), (s = +, e = 0)}; %4#1 is {(s = +, e = -25)}
+
+# The second join contains an exponent 26 below %large, so SE-I must not run.
+// argument: %2 is {(s = +, e = -26), (s = +, e = 0)}
+!call @__fpan_twosum_f32(%2, %0) : (f32, f32) -> (f32, f32) // %3#0 is
