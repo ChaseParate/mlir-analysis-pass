@@ -63,14 +63,12 @@ static TwoSumLemmaReturn applyLemmaZ2(const SEState &lhs, const SEState &rhs) {
 }
 
 static TwoSumLemmaReturn applyLemmaSEI(const SEState &lhs, const SEState &rhs) {
-  constexpr std::uint8_t maximumExponentDifference = kPrecision + 1;
-
   if (lhs.isNotZero() && rhs.isNotZero() &&
       lhs.forAllSetExponentsAndSigns([&](Exponent lhsExponent, bool lhsNegative) {
         return rhs.forAllSetExponentsAndSigns([&](Exponent rhsExponent, bool rhsNegative) {
           const int exponentDifference = std::abs(lhsExponent - rhsExponent);
-          return (exponentDifference < maximumExponentDifference ||
-                  (exponentDifference == maximumExponentDifference && lhsNegative == rhsNegative));
+          return (exponentDifference < (kPrecision + 1) ||
+                  (exponentDifference == (kPrecision + 1) && lhsNegative == rhsNegative));
         });
       }))
     return std::make_pair(lhs, rhs);
