@@ -22,3 +22,9 @@ add_fpan_analysis_test(
   lemma_family_z.mlir
   lemma_family_z.expected
 )
+
+add_fpan_analysis_test(
+  lemma_family_se_i
+  lemma_family_se_i.mlir
+  lemma_family_se_i.expected
+)

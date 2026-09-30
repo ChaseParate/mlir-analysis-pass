@@ -23,6 +23,8 @@ constexpr Exponent kEMax = 127;
 constexpr Exponent kZeroExponent = kEMin - 1; // Sentinel value for zeroes.
 constexpr std::size_t kExponentCount = kEMax - kZeroExponent + 1;
 
+constexpr std::uint8_t kPrecision = 24;
+
 class SEState {
   // Lower bit set means positive, upper bit set means negative. Both bits set
   // means top, both unset means bottom.
@@ -32,6 +34,8 @@ class SEState {
     const std::size_t exponentIndex = exponent - kZeroExponent;
     return exponentIndex * 2 + negative;
   }
+
+  bool isOnlySignedZero(bool negative) const { return *this == signedZero(negative); }
 
 public:
   SEState() = default;
@@ -84,14 +88,13 @@ public:
   bool isTop() const { return signsByExponent.all(); }
   bool isBottom() const { return signsByExponent.none(); }
 
-  bool isExactlySignedZero(bool negative) const { return *this == signedZero(negative); }
-  bool isExactlyPositiveZero() const { return isExactlySignedZero(false); }
-  bool isExactlyNegativeZero() const { return isExactlySignedZero(true); }
-  bool isExactlyAnyZero() const { return isExactlyPositiveZero() || isExactlyNegativeZero(); }
-
   bool isNotZero() const {
     return !isBottom() && !hasSign(kZeroExponent, false) && !hasSign(kZeroExponent, true);
   }
+
+  bool isOnlyPositiveZero() const { return isOnlySignedZero(false); }
+  bool isOnlyNegativeZero() const { return isOnlySignedZero(true); }
+  bool isOnlyZero() const { return isOnlyPositiveZero() || isOnlyNegativeZero(); }
 
   /// Least upper bound. Two disagreeing facts lose all information.
   static SEState join(const SEState &lhs, const SEState &rhs) {
@@ -131,6 +134,17 @@ public:
     }
 
     os << '}';
+  }
+
+  /// Excludes zero.
+  inline bool forAllSetExponentsAndSigns(
+      llvm::function_ref<bool(Exponent exponent, bool negative)> predicate) const {
+    for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
+      if ((hasSign(exponent, false) && !predicate(exponent, false)) ||
+          (hasSign(exponent, true) && !predicate(exponent, true)))
+        return false;
+    }
+    return true;
   }
 };
 

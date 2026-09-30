@@ -38,8 +38,8 @@ using TwoSumLemmaReturn = std::optional<std::pair<SEState, SEState>>;
 using TwoSumLemma = TwoSumLemmaReturn (*)(const SEState &lhs, const SEState &rhs);
 
 static TwoSumLemmaReturn applyLemmaZ1(const SEState &lhs, const SEState &rhs) {
-  const bool leftPos = lhs.isExactlyPositiveZero(), leftNeg = lhs.isExactlyNegativeZero();
-  const bool rightPos = rhs.isExactlyPositiveZero(), rightNeg = rhs.isExactlyNegativeZero();
+  const bool leftPos = lhs.isOnlyPositiveZero(), leftNeg = lhs.isOnlyNegativeZero();
+  const bool rightPos = rhs.isOnlyPositiveZero(), rightNeg = rhs.isOnlyNegativeZero();
 
   if (leftPos && rightPos) {
     return std::make_pair(SEState::positiveZero(), SEState::positiveZero());
@@ -53,16 +53,32 @@ static TwoSumLemmaReturn applyLemmaZ1(const SEState &lhs, const SEState &rhs) {
 }
 
 static TwoSumLemmaReturn applyLemmaZ2(const SEState &lhs, const SEState &rhs) {
-  if (lhs.isNotZero() && rhs.isExactlyAnyZero()) {
+  if (lhs.isNotZero() && rhs.isOnlyZero()) {
     return std::make_pair(lhs, SEState::positiveZero());
-  } else if (rhs.isNotZero() && lhs.isExactlyAnyZero()) {
+  } else if (rhs.isNotZero() && lhs.isOnlyZero()) {
     return std::make_pair(rhs, SEState::positiveZero());
   }
 
   return std::nullopt;
 }
 
-static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2};
+static TwoSumLemmaReturn applyLemmaSEI(const SEState &lhs, const SEState &rhs) {
+  constexpr std::uint8_t maximumExponentDifference = kPrecision + 1;
+
+  if (lhs.isNotZero() && rhs.isNotZero() &&
+      lhs.forAllSetExponentsAndSigns([&](Exponent lhsExponent, bool lhsNegative) {
+        return rhs.forAllSetExponentsAndSigns([&](Exponent rhsExponent, bool rhsNegative) {
+          const int exponentDifference = std::abs(lhsExponent - rhsExponent);
+          return (exponentDifference < maximumExponentDifference ||
+                  (exponentDifference == maximumExponentDifference && lhsNegative == rhsNegative));
+        });
+      }))
+    return std::make_pair(lhs, rhs);
+
+  return std::nullopt;
+}
+
+static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2, applyLemmaSEI};
 
 } // namespace twosum
 
