@@ -12,13 +12,13 @@ function(add_fpan_analysis_test name input checks)
 endfunction()
 
 add_fpan_analysis_test(
-  basic
-  basic.mlir
-  basic.expected
+  constants
+  constants.mlir
+  constants.expected
 )
 
 add_fpan_analysis_test(
-  twosum
-  twosum.mlir
-  twosum.expected
+  lemma_family_z
+  lemma_family_z.mlir
+  lemma_family_z.expected
 )
