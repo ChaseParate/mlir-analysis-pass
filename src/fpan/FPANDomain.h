@@ -104,6 +104,39 @@ public:
     return newState;
   }
 
+  /// Checks if a predicate is true for every set of nonzero sign/exponent pairs.
+  inline bool forAllSetExponentsAndSigns(
+      llvm::function_ref<bool(Exponent exponent, bool negative)> predicate) const {
+    for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
+      if ((hasSign(exponent, false) && !predicate(exponent, false)) ||
+          (hasSign(exponent, true) && !predicate(exponent, true)))
+        return false;
+    }
+    return true;
+  }
+
+  /// Visits every nonzero exponent with at least one set sign bit.
+  inline void forEachSetExponent(
+      llvm::function_ref<void(Exponent exponent, bool hasPositive, bool hasNegative)> callback)
+      const {
+    for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
+      const bool hasPositive = hasSign(exponent, false), hasNegative = hasSign(exponent, true);
+      if (hasPositive || hasNegative)
+        callback(exponent, hasPositive, hasNegative);
+    }
+  }
+
+  /// Visits every set nonzero sign/exponent pair.
+  inline void forEachSetExponentAndSign(
+      llvm::function_ref<void(Exponent exponent, bool negative)> callback) const {
+    forEachSetExponent([&](Exponent exponent, bool hasPositive, bool hasNegative) {
+      if (hasPositive)
+        callback(exponent, false);
+      if (hasNegative)
+        callback(exponent, true);
+    });
+  }
+
   bool operator==(const SEState &other) const { return signsByExponent == other.signsByExponent; }
   bool operator!=(const SEState &other) const { return signsByExponent != other.signsByExponent; }
 
@@ -111,13 +144,9 @@ public:
     os << '{';
 
     bool first = true;
-    for (std::size_t exponentIndex = 0; exponentIndex < kExponentCount; ++exponentIndex) {
-      Exponent exponent =
-          static_cast<Exponent>(static_cast<int>(kZeroExponent) + static_cast<int>(exponentIndex));
-      bool hasPositive = hasSign(exponent, false), hasNegative = hasSign(exponent, true);
-
+    auto printExponent = [&](Exponent exponent, bool hasPositive, bool hasNegative) {
       if (!hasPositive && !hasNegative)
-        continue;
+        return;
 
       if (!first)
         os << ", ";
@@ -131,20 +160,12 @@ public:
       else
         os << static_cast<int>(exponent);
       os << ", " << signText << ')';
-    }
+    };
+
+    printExponent(kZeroExponent, hasSign(kZeroExponent, false), hasSign(kZeroExponent, true));
+    forEachSetExponent(printExponent);
 
     os << '}';
-  }
-
-  /// Excludes zero.
-  inline bool forAllSetExponentsAndSigns(
-      llvm::function_ref<bool(Exponent exponent, bool negative)> predicate) const {
-    for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
-      if ((hasSign(exponent, false) && !predicate(exponent, false)) ||
-          (hasSign(exponent, true) && !predicate(exponent, true)))
-        return false;
-    }
-    return true;
   }
 };
 
