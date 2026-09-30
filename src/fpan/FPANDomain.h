@@ -1,5 +1,4 @@
 //===- FPANDomain.h - The abstract domain ---------------------------------===//
-// TODO
 //===----------------------------------------------------------------------===//
 
 #ifndef FPAN_DOMAIN_H
@@ -73,8 +72,26 @@ public:
 
   static SEState bottom() { return {}; }
 
+  static SEState signedZero(bool negative) {
+    SEState state;
+    state.setSign(kZeroExponent, negative);
+
+    return state;
+  }
+  static SEState positiveZero() { return signedZero(false); }
+  static SEState negativeZero() { return signedZero(true); }
+
   bool isTop() const { return signsByExponent.all(); }
   bool isBottom() const { return signsByExponent.none(); }
+
+  bool isExactlySignedZero(bool negative) const { return *this == signedZero(negative); }
+  bool isExactlyPositiveZero() const { return isExactlySignedZero(false); }
+  bool isExactlyNegativeZero() const { return isExactlySignedZero(true); }
+  bool isExactlyAnyZero() const { return isExactlyPositiveZero() || isExactlyNegativeZero(); }
+
+  bool isNotZero() const {
+    return !isBottom() && !hasSign(kZeroExponent, false) && !hasSign(kZeroExponent, true);
+  }
 
   /// Least upper bound. Two disagreeing facts lose all information.
   static SEState join(const SEState &lhs, const SEState &rhs) {

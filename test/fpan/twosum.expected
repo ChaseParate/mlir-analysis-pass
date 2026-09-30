@@ -1,0 +1,19 @@
+func.func private @__fpan_twosum_f32(f32, f32) -> (f32, f32)
+
+func.func @twosum_nonzero_zeroes() -> (f32, f32, f32, f32) {
+  %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32 // %0 is {(0, +)}
+  %1 = llvm.mlir.constant(0.000000e+00 : f32) : f32 // %1 is {(ZERO, +)}
+  %2 = llvm.mlir.constant(-0.000000e+00 : f32) : f32 // %2 is {(ZERO, -)}
+  %3:2 = call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> (f32, f32) // %3#0 is {(0, +)}; %3#1 is {(ZERO, +)}
+  %4:2 = call @__fpan_twosum_f32(%0, %2) : (f32, f32) -> (f32, f32) // %4#0 is {(0, +)}; %4#1 is {(ZERO, +)}
+  return %3#0, %3#1, %4#0, %4#1 : f32, f32, f32, f32
+}
+
+func.func @twosum_zero_family() -> (f32, f32, f32, f32, f32, f32) {
+  %0 = llvm.mlir.constant(0.000000e+00 : f32) : f32 // %0 is {(ZERO, +)}
+  %1 = llvm.mlir.constant(-0.000000e+00 : f32) : f32 // %1 is {(ZERO, -)}
+  %2:2 = call @__fpan_twosum_f32(%0, %0) : (f32, f32) -> (f32, f32) // %2#0 is {(ZERO, +)}; %2#1 is {(ZERO, +)}
+  %3:2 = call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> (f32, f32) // %3#0 is {(ZERO, +)}; %3#1 is {(ZERO, +)}
+  %4:2 = call @__fpan_twosum_f32(%1, %1) : (f32, f32) -> (f32, f32) // %4#0 is {(ZERO, -)}; %4#1 is {(ZERO, +)}
+  return %2#0, %2#1, %3#0, %3#1, %4#0, %4#1 : f32, f32, f32, f32, f32, f32
+}

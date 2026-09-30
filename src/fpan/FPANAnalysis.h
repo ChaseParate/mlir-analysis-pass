@@ -20,6 +20,11 @@ public:
                                      llvm::ArrayRef<const SELattice *> operands,
                                      llvm::ArrayRef<SELattice *> results) override;
 
+  /// Calls are dispatched by SparseForwardDataFlowAnalysis separately from
+  /// ordinary operations when interprocedural analysis is disabled.
+  void visitExternalCall(mlir::CallOpInterface call, llvm::ArrayRef<const SELattice *> operands,
+                         llvm::ArrayRef<SELattice *> results) override;
+
   /// The state of anything entering the analysis from outside: function
   /// arguments, and results the transfer function declines to reason about.
   void setToEntryState(SELattice *lattice) override;
