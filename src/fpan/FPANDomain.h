@@ -152,14 +152,11 @@ public:
         os << ", ";
       first = false;
 
-      const char *signText = (hasPositive && hasNegative) ? "+/-" : (hasPositive ? "+" : "-");
-
-      os << '(';
+      const char *signText = (hasPositive && hasNegative) ? "±" : (hasPositive ? "+" : "-");
       if (exponent == kZeroExponent)
-        os << "ZERO";
+        os << signText << '0';
       else
-        os << static_cast<int>(exponent);
-      os << ", " << signText << ')';
+        os << "(s = " << signText << ", e = " << static_cast<int>(exponent) << ')';
     };
 
     printExponent(kZeroExponent, hasSign(kZeroExponent, false), hasSign(kZeroExponent, true));

@@ -1,46 +1,46 @@
 llvm.func @pos_zero() -> f32 {
-  %0 = llvm.mlir.constant(0.000000e+00 : f32) : f32 // %0 is {(ZERO, +)}
+  %0 = llvm.mlir.constant(0.000000e+00 : f32) : f32 // %0 is {+0}
   llvm.return %0 : f32
 }
 
 llvm.func @neg_zero() -> f32 {
-  %0 = llvm.mlir.constant(-0.000000e+00 : f32) : f32 // %0 is {(ZERO, -)}
+  %0 = llvm.mlir.constant(-0.000000e+00 : f32) : f32 // %0 is {-0}
   llvm.return %0 : f32
 }
 
 llvm.func @pos_one() -> f32 {
-  %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32 // %0 is {(0, +)}
+  %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32 // %0 is {(s = +, e = 0)}
   llvm.return %0 : f32
 }
 
 llvm.func @neg_one() -> f32 {
-  %0 = llvm.mlir.constant(-1.000000e+00 : f32) : f32 // %0 is {(0, -)}
+  %0 = llvm.mlir.constant(-1.000000e+00 : f32) : f32 // %0 is {(s = -, e = 0)}
   llvm.return %0 : f32
 }
 
 llvm.func @pos_half() -> f32 {
-  %0 = llvm.mlir.constant(5.000000e-01 : f32) : f32 // %0 is {(-1, +)}
+  %0 = llvm.mlir.constant(5.000000e-01 : f32) : f32 // %0 is {(s = +, e = -1)}
   llvm.return %0 : f32
 }
 
 llvm.func @neg_six_point_five() -> f32 {
-  %0 = llvm.mlir.constant(-6.500000e+00 : f32) : f32 // %0 is {(2, -)}
+  %0 = llvm.mlir.constant(-6.500000e+00 : f32) : f32 // %0 is {(s = -, e = 2)}
   llvm.return %0 : f32
 }
 
 llvm.func @pos_min_normal() -> f32 {
-  %0 = llvm.mlir.constant(1.17549435E-38 : f32) : f32 // %0 is {(-126, +)}
+  %0 = llvm.mlir.constant(1.17549435E-38 : f32) : f32 // %0 is {(s = +, e = -126)}
   llvm.return %0 : f32
 }
 
 llvm.func @neg_max_normal() -> f32 {
-  %0 = llvm.mlir.constant(-3.40282347E+38 : f32) : f32 // %0 is {(127, -)}
+  %0 = llvm.mlir.constant(-3.40282347E+38 : f32) : f32 // %0 is {(s = -, e = 127)}
   llvm.return %0 : f32
 }
 
 llvm.func @unhandled_add() -> f32 {
-  %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32 // %0 is {(0, +)}
-  %1 = llvm.mlir.constant(2.000000e+00 : f32) : f32 // %1 is {(1, +)}
+  %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32 // %0 is {(s = +, e = 0)}
+  %1 = llvm.mlir.constant(2.000000e+00 : f32) : f32 // %1 is {(s = +, e = 1)}
   %2 = llvm.fadd %0, %1 : f32
 !  %2 = llvm.fadd %0, %1 : f32 //
   llvm.return %2 : f32

@@ -1,8 +1,8 @@
 # Strictly less than p + 1 preserves both inputs.
-call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> (f32, f32) // %5#0 is {(0, +)}; %5#1 is {(-24, +)}
+call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> (f32, f32) // %5#0 is {(s = +, e = 0)}; %5#1 is {(s = +, e = -24)}
 
 # At exactly p + 1, equal signs preserve both inputs.
-call @__fpan_twosum_f32(%0, %2) : (f32, f32) -> (f32, f32) // %6#0 is {(0, +)}; %6#1 is {(-25, +)}
+call @__fpan_twosum_f32(%0, %2) : (f32, f32) -> (f32, f32) // %6#0 is {(s = +, e = 0)}; %6#1 is {(s = +, e = -25)}
 
 # The sufficient condition deliberately rejects opposite signs at the boundary
 # and all larger exponent separations.
