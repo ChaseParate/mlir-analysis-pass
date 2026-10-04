@@ -46,7 +46,7 @@ public:
 
     if (f.isZero()) {
       SEState state;
-      state.setSign(kZeroExponent, f.isNegative());
+      state.set(kZeroExponent, f.isNegative());
       return state;
     }
 
@@ -57,15 +57,15 @@ public:
     }
 
     SEState state;
-    state.setSign(exponent, f.isNegative());
+    state.set(exponent, f.isNegative());
     return state;
   }
 
-  bool hasSign(Exponent exponent, bool negative) const {
+  bool isSet(Exponent exponent, bool negative) const {
     return signsByExponent.test(index(exponent, negative));
   }
 
-  void setSign(Exponent exponent, bool negative) { signsByExponent.set(index(exponent, negative)); }
+  void set(Exponent exponent, bool negative) { signsByExponent.set(index(exponent, negative)); }
 
   static SEState top() {
     SEState state;
@@ -78,7 +78,7 @@ public:
 
   static SEState signedZero(bool negative) {
     SEState state;
-    state.setSign(kZeroExponent, negative);
+    state.set(kZeroExponent, negative);
 
     return state;
   }
@@ -89,7 +89,7 @@ public:
   bool isBottom() const { return signsByExponent.none(); }
 
   bool isNotZero() const {
-    return !isBottom() && !hasSign(kZeroExponent, false) && !hasSign(kZeroExponent, true);
+    return !isBottom() && !isSet(kZeroExponent, false) && !isSet(kZeroExponent, true);
   }
 
   bool isOnlyPositiveZero() const { return isOnlySignedZero(false); }
@@ -108,8 +108,8 @@ public:
   inline bool forAllSetExponentsAndSigns(
       llvm::function_ref<bool(Exponent exponent, bool negative)> predicate) const {
     for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
-      if ((hasSign(exponent, false) && !predicate(exponent, false)) ||
-          (hasSign(exponent, true) && !predicate(exponent, true)))
+      if ((isSet(exponent, false) && !predicate(exponent, false)) ||
+          (isSet(exponent, true) && !predicate(exponent, true)))
         return false;
     }
     return true;
@@ -120,7 +120,7 @@ public:
       llvm::function_ref<void(Exponent exponent, bool hasPositive, bool hasNegative)> callback)
       const {
     for (int exponent = kEMin; exponent <= kEMax; ++exponent) {
-      const bool hasPositive = hasSign(exponent, false), hasNegative = hasSign(exponent, true);
+      const bool hasPositive = isSet(exponent, false), hasNegative = isSet(exponent, true);
       if (hasPositive || hasNegative)
         callback(exponent, hasPositive, hasNegative);
     }
@@ -159,7 +159,7 @@ public:
         os << "(s = " << signText << ", e = " << static_cast<int>(exponent) << ')';
     };
 
-    printExponent(kZeroExponent, hasSign(kZeroExponent, false), hasSign(kZeroExponent, true));
+    printExponent(kZeroExponent, isSet(kZeroExponent, false), isSet(kZeroExponent, true));
     forEachSetExponent(printExponent);
 
     os << '}';
