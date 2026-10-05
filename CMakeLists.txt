@@ -121,8 +121,22 @@ add_subdirectory(src)
 find_program(MLIR_OPT_EXECUTABLE mlir-opt
   HINTS ${MLIR_TOOLS_BINARY_DIR} ${LLVM_TOOLS_BINARY_DIR}
   DOC "mlir-opt used to run the plugin")
+option(ENABLE_LLVM_IMPORT_INTEGRATION_TESTS
+  "Enable tests that import LLVM IR with mlir-translate" ON)
+
+if(ENABLE_LLVM_IMPORT_INTEGRATION_TESTS)
+  find_program(MLIR_TRANSLATE_EXECUTABLE mlir-translate
+    HINTS ${MLIR_TOOLS_BINARY_DIR} ${LLVM_TOOLS_BINARY_DIR}
+    DOC "mlir-translate used to import LLVM IR integration tests")
+endif()
 
 if(MLIR_OPT_EXECUTABLE)
+  if(ENABLE_LLVM_IMPORT_INTEGRATION_TESTS AND NOT MLIR_TRANSLATE_EXECUTABLE)
+    message(FATAL_ERROR
+      "LLVM-import integration tests are enabled, but mlir-translate was not found. "
+      "Set MLIR_TOOLS_BINARY_DIR/LLVM_TOOLS_BINARY_DIR or disable "
+      "ENABLE_LLVM_IMPORT_INTEGRATION_TESTS.")
+  endif()
   # A plugin built against one LLVM and loaded into another is rejected at
   # run time.  Catching the mismatch now saves a baffling debugging session.
   execute_process(COMMAND "${MLIR_OPT_EXECUTABLE}" --version

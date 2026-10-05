@@ -1,0 +1,12 @@
+# Facts attach to extracted scalar values, never to the aggregate llvm.call.
+llvm.extractvalue %4[0] : !llvm.struct<(f32, f32)>  // %5 is {(s = +, e = 0)}
+llvm.extractvalue %4[1] : !llvm.struct<(f32, f32)>  // %6 is {+0}
+llvm.extractvalue %7[0] : !llvm.struct<(f32, f32)>  // %8 is {(s = +, e = 0)}
+llvm.extractvalue %7[1] : !llvm.struct<(f32, f32)>  // %9 is {+0}
+llvm.extractvalue %3[0] : !llvm.struct<(f32, f32)>  // %4 is {+0}
+llvm.extractvalue %3[1] : !llvm.struct<(f32, f32)>  // %5 is {+0}
+llvm.extractvalue %6[0] : !llvm.struct<(f32, f32)>  // %7 is {+0}
+llvm.extractvalue %6[1] : !llvm.struct<(f32, f32)>  // %8 is {+0}
+llvm.extractvalue %9[0] : !llvm.struct<(f32, f32)>  // %10 is {-0}
+llvm.extractvalue %9[1] : !llvm.struct<(f32, f32)>  // %11 is {+0}
+!llvm.call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> !llvm.struct<(f32, f32)> //

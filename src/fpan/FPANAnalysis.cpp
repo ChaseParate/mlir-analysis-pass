@@ -25,13 +25,48 @@ namespace mlir_analysis_pass::fpan {
 
 namespace twosum {
 
-static bool isTwoSumCall(Operation *op) {
-  auto call = dyn_cast<func::CallOp>(op);
-  return call && call.getCallee() == "__fpan_twosum_f32" &&
-         (call.getNumOperands() == 2 &&
-          llvm::all_of(call.getOperandTypes(), [](Type type) { return type.isF32(); })) &&
-         (call.getNumResults() == 2 &&
-          llvm::all_of(call.getResultTypes(), [](Type type) { return type.isF32(); }));
+static const char *kTwoSumFunctionName = "__fpan_twosum_f32";
+
+static bool isTwoSumCallee(Operation *op) {
+  if (auto call = dyn_cast<func::CallOp>(op))
+    return call.getCallee() == kTwoSumFunctionName;
+
+  // `mlir-translate --import-llvm` represents an LLVM IR call with `llvm.call`, rather than
+  // `func.call`.
+  if (auto call = dyn_cast<LLVM::CallOp>(op)) {
+    const std::optional<llvm::StringRef> callee = call.getCallee();
+    return callee && *callee == kTwoSumFunctionName;
+  }
+
+  return false;
+}
+
+static bool isTwoSumFuncCall(Operation *op) {
+  return isa<func::CallOp>(op) && isTwoSumCallee(op) && op->getNumOperands() == 2 &&
+         llvm::all_of(op->getOperandTypes(), [](Type type) { return type.isF32(); }) &&
+         op->getNumResults() == 2 &&
+         llvm::all_of(op->getResultTypes(), [](Type type) { return type.isF32(); });
+}
+
+static bool isTwoSumAggregateCall(Operation *op) {
+  auto call = dyn_cast<LLVM::CallOp>(op);
+  if (!call || !isTwoSumCallee(op) || op->getNumOperands() != 2 ||
+      !llvm::all_of(op->getOperandTypes(), [](Type type) { return type.isF32(); }) ||
+      op->getNumResults() != 1)
+    return false;
+
+  auto resultType = dyn_cast<LLVM::LLVMStructType>(op->getResult(0).getType());
+  return resultType && resultType.getBody().size() == 2 &&
+         llvm::all_of(resultType.getBody(), [](Type type) { return type.isF32(); });
+}
+
+static bool isRecognizedTwoSumExtract(LLVM::ExtractValueOp extract) {
+  auto call = extract.getContainer().getDefiningOp<LLVM::CallOp>();
+  if (!call || !isTwoSumAggregateCall(call))
+    return false;
+
+  ArrayRef<int64_t> position = extract.getPosition();
+  return position.size() == 1 && (position[0] == 0 || position[0] == 1);
 }
 
 using TwoSumLemmaReturn = std::optional<std::pair<SEState, SEState>>;
@@ -87,6 +122,11 @@ LogicalResult FPANAnalysis::visitOperation(Operation *op, ArrayRef<const SELatti
     return success();
   };
 
+  if (auto extract = dyn_cast<LLVM::ExtractValueOp>(op);
+      extract && twosum::isRecognizedTwoSumExtract(extract))
+    // The aggregate TwoSum call writes this scalar result's state directly.
+    return success();
+
   if (op->getNumResults() != 1 || !op->getResult(0).getType().isF32())
     return unknown();
   SELattice *result = results[0];
@@ -108,7 +148,7 @@ LogicalResult FPANAnalysis::visitOperation(Operation *op, ArrayRef<const SELatti
 
 void FPANAnalysis::visitExternalCall(CallOpInterface call, ArrayRef<const SELattice *> operands,
                                      ArrayRef<SELattice *> results) {
-  if (twosum::isTwoSumCall(call.getOperation())) {
+  if (twosum::isTwoSumFuncCall(call.getOperation())) {
     const SEState &lhs = operands[0]->getValue(), &rhs = operands[1]->getValue();
 
     twosum::TwoSumLemmaReturn res;
@@ -119,6 +159,35 @@ void FPANAnalysis::visitExternalCall(CallOpInterface call, ArrayRef<const SELatt
         return;
       }
     }
+  }
+
+  if (twosum::isTwoSumAggregateCall(call.getOperation())) {
+    const SEState &lhs = operands[0]->getValue(), &rhs = operands[1]->getValue();
+    twosum::TwoSumLemmaReturn lemmaResult;
+    for (const auto &lemma : twosum::kLemmas) {
+      if ((lemmaResult = lemma(lhs, rhs)))
+        break;
+    }
+
+    for (Operation *user : call->getResult(0).getUsers()) {
+      auto extract = dyn_cast<LLVM::ExtractValueOp>(user);
+      if (!extract || !twosum::isRecognizedTwoSumExtract(extract))
+        continue;
+
+      SELattice *extractResult = getOrCreate<SELattice>(extract.getResult());
+      if (!lemmaResult) {
+        setToEntryState(extractResult);
+        continue;
+      }
+
+      const int64_t position = extract.getPosition()[0];
+      propagateIfChanged(extractResult, extractResult->join(position == 0 ? lemmaResult->first
+                                                                          : lemmaResult->second));
+    }
+
+    // SEState is scalar-only: the aggregate result carries no FPAN fact.
+    setAllToEntryStates(results);
+    return;
   }
 
   setAllToEntryStates(results);

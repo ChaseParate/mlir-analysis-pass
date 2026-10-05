@@ -11,6 +11,21 @@ function(add_fpan_analysis_test name input checks)
   )
 endfunction()
 
+function(add_fpan_llvm_import_analysis_test name input checks)
+  add_test(
+    NAME fpan-analysis::${name}
+    COMMAND ${CMAKE_COMMAND}
+      -DMLIR_OPT=${MLIR_OPT_EXECUTABLE}
+      -DMLIR_TRANSLATE=${MLIR_TRANSLATE_EXECUTABLE}
+      -DPLUGIN=$<TARGET_FILE:FPANAnalysis>
+      -DPIPELINE=builtin.module\(fpan-analysis\)
+      -DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/${input}
+      -DGENERATED_INPUT=${CMAKE_CURRENT_BINARY_DIR}/${name}.mlir
+      -DCHECKS=${CMAKE_CURRENT_SOURCE_DIR}/${checks}
+      -P ${PROJECT_SOURCE_DIR}/cmake/RunTest.cmake
+  )
+endfunction()
+
 add_fpan_analysis_test(
   constants
   constants.mlir
@@ -34,3 +49,11 @@ add_fpan_analysis_test(
   cfg_join.mlir
   cfg_join.expected
 )
+
+if(ENABLE_LLVM_IMPORT_INTEGRATION_TESTS)
+  add_fpan_llvm_import_analysis_test(
+    llvm_aggregate_call
+    llvm_aggregate_call.ll
+    llvm_aggregate_call.expected
+  )
+endif()

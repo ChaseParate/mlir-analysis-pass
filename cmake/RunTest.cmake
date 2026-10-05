@@ -5,12 +5,31 @@
 # on Linux, macOS, and WSL2 -- and on a Windows host, should anyone try.
 #
 # Expected: -DMLIR_OPT= -DPLUGIN= -DPIPELINE= -DINPUT= -DCHECKS=
+# Optional LLVM-import mode also needs: -DMLIR_TRANSLATE= -DGENERATED_INPUT=
 
 foreach(required MLIR_OPT PLUGIN PIPELINE INPUT CHECKS)
   if(NOT DEFINED ${required})
     message(FATAL_ERROR "RunTest.cmake: -D${required}= is required")
   endif()
 endforeach()
+
+if(DEFINED MLIR_TRANSLATE OR DEFINED GENERATED_INPUT)
+  foreach(required MLIR_TRANSLATE GENERATED_INPUT)
+    if(NOT DEFINED ${required})
+      message(FATAL_ERROR "RunTest.cmake: -D${required}= is required for LLVM import")
+    endif()
+  endforeach()
+
+  execute_process(
+    COMMAND "${MLIR_TRANSLATE}" --import-llvm "${INPUT}"
+    OUTPUT_FILE "${GENERATED_INPUT}"
+    ERROR_VARIABLE translate_error
+    RESULT_VARIABLE translate_status)
+  if(NOT translate_status EQUAL 0)
+    message(FATAL_ERROR "mlir-translate --import-llvm failed (${translate_status}):\n${translate_error}")
+  endif()
+  set(INPUT "${GENERATED_INPUT}")
+endif()
 
 execute_process(
   COMMAND "${MLIR_OPT}"
