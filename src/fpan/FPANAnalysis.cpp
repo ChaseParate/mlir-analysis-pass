@@ -97,21 +97,22 @@ static TwoSumLemmaReturn applyLemmaZ2(const SEState &lhs, const SEState &rhs) {
   return std::nullopt;
 }
 
-static TwoSumLemmaReturn applyLemmaSEI(const SEState &lhs, const SEState &rhs) {
-  if (lhs.isNotZero() && rhs.isNotZero() &&
-      lhs.forAllSetExponentsAndSigns([&](Exponent lhsExponent, bool lhsNegative) {
-        return rhs.forAllSetExponentsAndSigns([&](Exponent rhsExponent, bool rhsNegative) {
-          const int exponentDifference = std::abs(lhsExponent - rhsExponent);
-          return (exponentDifference < (kPrecision + 1) ||
-                  (exponentDifference == (kPrecision + 1) && lhsNegative == rhsNegative));
-        });
-      }))
+static TwoSumLemmaReturn applyLemmaI(const SEState &lhs, const SEState &rhs) {
+  const auto lemma = [](const SEState &x, const SEState y) -> bool {
+    return x.forAllSetExponentsAndSigns([&](Exponent ex, bool sx) {
+      return y.forAllSetExponentsAndSigns([&](Exponent ey, bool sy) {
+        return ex > ey + kPrecision + 1 || (ex == ey + kPrecision + 1 && sx == sy);
+      });
+    });
+  };
+
+  if (lhs.isNotZero() && rhs.isNotZero() && (lemma(lhs, rhs) || lemma(rhs, lhs)))
     return std::make_pair(lhs, rhs);
 
   return std::nullopt;
 }
 
-static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2, applyLemmaSEI};
+static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2, applyLemmaI};
 
 } // namespace twosum
 
