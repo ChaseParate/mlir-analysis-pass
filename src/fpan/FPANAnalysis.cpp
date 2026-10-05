@@ -70,34 +70,34 @@ static bool isRecognizedTwoSumExtract(LLVM::ExtractValueOp extract) {
 }
 
 using TwoSumLemmaReturn = std::optional<std::pair<SEState, SEState>>;
-using TwoSumLemma = TwoSumLemmaReturn (*)(const SEState &lhs, const SEState &rhs);
+using TwoSumLemma = TwoSumLemmaReturn (*)(const SEState &x, const SEState &y);
 
-static TwoSumLemmaReturn applyLemmaZ1(const SEState &lhs, const SEState &rhs) {
-  const bool leftPos = lhs.isOnlyPositiveZero(), leftNeg = lhs.isOnlyNegativeZero();
-  const bool rightPos = rhs.isOnlyPositiveZero(), rightNeg = rhs.isOnlyNegativeZero();
+static TwoSumLemmaReturn applyLemmaZ1(const SEState &x, const SEState &y) {
+  const bool xPos = x.isOnlyPositiveZero(), xNeg = x.isOnlyNegativeZero();
+  const bool yPos = y.isOnlyPositiveZero(), yNeg = y.isOnlyNegativeZero();
 
-  if (leftPos && rightPos) {
+  if (xPos && yPos) {
     return std::make_pair(SEState::positiveZero(), SEState::positiveZero());
-  } else if ((leftPos && rightNeg) || (leftNeg && rightPos)) {
+  } else if ((xPos && yNeg) || (xNeg && yPos)) {
     return std::make_pair(SEState::positiveZero(), SEState::positiveZero());
-  } else if (leftNeg && rightNeg) {
+  } else if (xNeg && yNeg) {
     return std::make_pair(SEState::negativeZero(), SEState::positiveZero());
   }
 
   return std::nullopt;
 }
 
-static TwoSumLemmaReturn applyLemmaZ2(const SEState &lhs, const SEState &rhs) {
-  if (lhs.isNotZero() && rhs.isOnlyZero()) {
-    return std::make_pair(lhs, SEState::positiveZero());
-  } else if (rhs.isNotZero() && lhs.isOnlyZero()) {
-    return std::make_pair(rhs, SEState::positiveZero());
+static TwoSumLemmaReturn applyLemmaZ2(const SEState &x, const SEState &y) {
+  if (x.isNotZero() && y.isOnlyZero()) {
+    return std::make_pair(x, SEState::positiveZero());
+  } else if (y.isNotZero() && x.isOnlyZero()) {
+    return std::make_pair(y, SEState::positiveZero());
   }
 
   return std::nullopt;
 }
 
-static TwoSumLemmaReturn applyLemmaI(const SEState &lhs, const SEState &rhs) {
+static TwoSumLemmaReturn applyLemmaI(const SEState &x, const SEState &y) {
   const auto lemma = [](const SEState &x, const SEState y) -> bool {
     return x.forAllSetExponentsAndSigns([&](Exponent ex, bool sx) {
       return y.forAllSetExponentsAndSigns([&](Exponent ey, bool sy) {
@@ -106,8 +106,8 @@ static TwoSumLemmaReturn applyLemmaI(const SEState &lhs, const SEState &rhs) {
     });
   };
 
-  if (lhs.isNotZero() && rhs.isNotZero() && (lemma(lhs, rhs) || lemma(rhs, lhs)))
-    return std::make_pair(lhs, rhs);
+  if (x.isNotZero() && y.isNotZero() && (lemma(x, y) || lemma(y, x)))
+    return std::make_pair(x, y);
 
   return std::nullopt;
 }
