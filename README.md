@@ -21,6 +21,19 @@ Format the C++ sources with LLVM style:
 cmake --build build --target format
 ```
 
+## Runtime FPAN assertion demo
+
+Build and run an instrumented TwoSum case with:
+
+```sh
+cmake --build build --target run-fpan-instrumentation-demo
+```
+
+The target converts `test/fpan/instrumentation_demo.mlir` to the LLVM dialect,
+runs FPAN with assertion instrumentation enabled, translates the result to LLVM
+IR, and links it with the concrete TwoSum and assertion-runtime implementations.
+An assertion failure terminates the target with the offending `f32` bit pattern.
+
 That is the whole procedure on Linux, macOS, and WSL2. There is no platform
 flag to set and no path to edit. `CMakeLists.txt` finds MLIR by asking
 whichever `llvm-config` is on your `PATH` where its CMake package lives, so if
