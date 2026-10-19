@@ -112,7 +112,49 @@ static TwoSumLemmaReturn applyLemmaI(const SEState &x, const SEState &y) {
   return std::nullopt;
 }
 
-static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2, applyLemmaI};
+static TwoSumLemmaReturn applyLemmaS1(const SEState &x, const SEState &y) {
+  const auto applies = [](const SEState &large, const SEState &small) {
+    return large.isNotZero() && small.isNotZero() &&
+           large.forAllSetExponentsAndSigns([&](Exponent el, bool sl) {
+             return small.forAllSetExponentsAndSigns([&](Exponent es, bool ss) {
+               // Also avoid exponent overflow (see statement 1) or reaching subnormal.
+               return sl == ss && el == es + kPrecision && el < kEMax &&
+                      es - (kPrecision - 1) >= kEMin;
+             });
+           });
+  };
+
+  const SEState *large = nullptr;
+  const SEState *small = nullptr;
+  if (applies(x, y)) {
+    large = &x;
+    small = &y;
+  } else if (applies(y, x)) {
+    large = &y;
+    small = &x;
+  } else {
+    return std::nullopt;
+  }
+
+  // Statement 2
+  SEState sum = *large;
+  SEState error = *small;
+
+  // Statement 1
+  large->forEachSetExponentAndSign([&](Exponent ex, bool sx) {
+    // ex <= es <= ex + 1
+    sum.set(ex + 1, sx); // (ex, sx) was already set by Statement 2.
+
+    // se != sy and ey - (p - 1) <= ee <= ex - p.
+    // Since ey = ex - p and sx == sy: ex - 2p + 1 <= ee <= ex - p, and se != sx.
+    for (int ee = ex - 2 * kPrecision + 1; ee <= ex - kPrecision; ++ee)
+      error.set(static_cast<Exponent>(ee), !sx);
+  });
+
+  return std::make_pair(sum, error);
+}
+
+static constexpr TwoSumLemma kLemmas[] = {applyLemmaZ1, applyLemmaZ2, applyLemmaI, applyLemmaS1};
 
 } // namespace twosum
 

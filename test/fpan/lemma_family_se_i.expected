@@ -1,5 +1,8 @@
-# A separation of p is not sufficient to preserve both inputs.
-!call @__fpan_twosum_f32(%0, %1) : (f32, f32) -> (f32, f32) // %5#0 is
+# A separation of p is handled by SE-S1, which joins its identity and rounded
+# alternatives in the non-relational SE domain.
+%5#0 is {(s = +, e = 0), (s = +, e = 1)}
+%5#1 is {(s = -, e = -47)
+%5#1 is {(s = ±, e = -24)}
 
 # At exactly p + 1, equal signs preserve both inputs.
 call @__fpan_twosum_f32(%0, %2) : (f32, f32) -> (f32, f32) // %6#0 is {(s = +, e = 0)}; %6#1 is {(s = +, e = -25)}
