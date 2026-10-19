@@ -4,6 +4,7 @@
 #ifndef FPAN_DOMAIN_H
 #define FPAN_DOMAIN_H
 
+#include <array>
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
@@ -16,19 +17,26 @@
 
 namespace mlir_analysis_pass::fpan {
 
-using Exponent = int8_t; // Assuming `f32`'s for now.
+using Exponent = std::int8_t; // Assuming `f32`'s for now.
 
 constexpr Exponent kEMin = -126;
 constexpr Exponent kEMax = 127;
 constexpr Exponent kZeroExponent = kEMin - 1; // Sentinel value for zeroes.
 constexpr std::size_t kExponentCount = kEMax - kZeroExponent + 1;
+constexpr std::size_t kRequiredBits = kExponentCount * 2; // Positive & negative.
+
+// NOTE: These are hard-coded in `FPANAssert.cpp`, so you'll need to change it there if you change
+// it here.
+using EncodedIntType = std::uint64_t;
+constexpr std::size_t kEncodedWordBits = sizeof(EncodedIntType) * 8;
+constexpr std::size_t kEncodedArraySize = (kRequiredBits + kEncodedWordBits - 1) / kEncodedWordBits;
 
 constexpr std::uint8_t kPrecision = 24;
 
 class SEState {
   // Lower bit set means positive, upper bit set means negative. Both bits set
   // means top, both unset means bottom.
-  std::bitset<kExponentCount * 2> signsByExponent;
+  std::bitset<kRequiredBits> signsByExponent;
 
   static inline constexpr std::size_t index(Exponent exponent, bool negative) {
     const std::size_t exponentIndex = exponent - kZeroExponent;
@@ -88,9 +96,9 @@ public:
   bool isTop() const { return signsByExponent.all(); }
   bool isBottom() const { return signsByExponent.none(); }
 
-  bool isNotZero() const {
-    return !isBottom() && !isSet(kZeroExponent, false) && !isSet(kZeroExponent, true);
-  }
+  bool isPositiveZero() const { return isSet(kZeroExponent, false); }
+  bool isNegativeZero() const { return isSet(kZeroExponent, true); }
+  bool isZero() const { return isPositiveZero() || isNegativeZero(); }
 
   bool isOnlyPositiveZero() const { return isOnlySignedZero(false); }
   bool isOnlyNegativeZero() const { return isOnlySignedZero(true); }
@@ -163,6 +171,18 @@ public:
     forEachSetExponent(printExponent);
 
     os << '}';
+  }
+
+  std::array<EncodedIntType, kEncodedArraySize> encodeToArray() const {
+    std::array<EncodedIntType, kEncodedArraySize> words;
+    words.fill(0UL);
+
+    for (std::size_t bit = 0; bit < kRequiredBits; bit++) {
+      if (signsByExponent.test(bit))
+        words[bit / kEncodedWordBits] |= 1UL << (bit % kEncodedWordBits);
+    }
+
+    return words;
   }
 };
 

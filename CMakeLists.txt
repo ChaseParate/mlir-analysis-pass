@@ -85,6 +85,7 @@ if(CLANG_FORMAT_EXECUTABLE)
     src/fpan/FPANAnalysis.h
     src/fpan/FPANDomain.h
     src/fpan/FPANPlugin.cpp
+    src/fpan/instrumentation/FPANAssert.cpp
     src/zero/ZeroAnalysis.cpp
     src/zero/ZeroAnalysis.h
     src/zero/ZeroDomain.h

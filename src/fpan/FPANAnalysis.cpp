@@ -88,9 +88,9 @@ static TwoSumLemmaReturn applyLemmaZ1(const SEState &x, const SEState &y) {
 }
 
 static TwoSumLemmaReturn applyLemmaZ2(const SEState &x, const SEState &y) {
-  if (x.isNotZero() && y.isOnlyZero()) {
+  if (!x.isZero() && y.isOnlyZero()) {
     return std::make_pair(x, SEState::positiveZero());
-  } else if (y.isNotZero() && x.isOnlyZero()) {
+  } else if (!y.isZero() && x.isOnlyZero()) {
     return std::make_pair(y, SEState::positiveZero());
   }
 
@@ -106,7 +106,7 @@ static TwoSumLemmaReturn applyLemmaI(const SEState &x, const SEState &y) {
     });
   };
 
-  if (x.isNotZero() && y.isNotZero() && (lemma(x, y) || lemma(y, x)))
+  if (!x.isZero() && !y.isZero() && (lemma(x, y) || lemma(y, x)))
     return std::make_pair(x, y);
 
   return std::nullopt;
@@ -114,7 +114,7 @@ static TwoSumLemmaReturn applyLemmaI(const SEState &x, const SEState &y) {
 
 static TwoSumLemmaReturn applyLemmaS1(const SEState &x, const SEState &y) {
   const auto applies = [](const SEState &large, const SEState &small) {
-    return large.isNotZero() && small.isNotZero() &&
+    return !large.isZero() && !small.isZero() &&
            large.forAllSetExponentsAndSigns([&](Exponent el, bool sl) {
              return small.forAllSetExponentsAndSigns([&](Exponent es, bool ss) {
                // Also avoid exponent overflow (see statement 1) or reaching subnormal.
