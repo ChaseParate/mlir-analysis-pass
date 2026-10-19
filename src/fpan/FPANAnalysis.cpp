@@ -137,7 +137,7 @@ static TwoSumLemmaReturn applyLemmaS1(const SEState &x, const SEState &y) {
   }
 
   // Statement 2
-  SEState sum = *large;
+  SEState sum = SEState::negativeZero();
   SEState error = *small;
 
   // Statement 1
